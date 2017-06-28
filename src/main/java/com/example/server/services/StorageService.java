@@ -1,8 +1,9 @@
 package com.example.server.services;
 
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Path;
+import java.io.File;
 import java.util.stream.Stream;
 
 /**
@@ -12,11 +13,15 @@ import java.util.stream.Stream;
  */
 public interface StorageService {
 
-    boolean store(MultipartFile file);
+    String store2cache(MultipartFile file);
+
+    void move2dir(File file, String dir);
+
+    Stream<String> getSimilar(String path);
+
+    Resource load(String dir, String name);
 
     void deleteAll();
-
-    Stream<Path> getSame(String path);
 
     void init();
 }

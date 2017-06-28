@@ -1,4 +1,4 @@
-package com.example.server;
+package com.example.server.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,4 +67,9 @@ public class HashUtils {
         }
         return result;
     }
+
+
+    private HashUtils() {
+    }
 }
+

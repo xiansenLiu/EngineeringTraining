@@ -1,14 +1,19 @@
 package com.example.server.services;
 
-import com.example.server.HashUtils;
+import com.example.server.utils.HashUtils;
+import com.example.server.utils.ImageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,19 +38,27 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public boolean store(MultipartFile file) {
+    public String store2cache(MultipartFile file) {
         if (file.isEmpty()) {
-            return false;
+            return null;
         }
         Path targetFile = null;
+        String hashedName = null;
         try {
-            String filename = file.getOriginalFilename();
-            targetFile = cacheDir.resolve(HashUtils.stringMD5(filename));
-            if (targetFile.toFile().exists()) {
-                LOGGER.info(filename + " exists , delete it");
+            String fileName = file.getOriginalFilename();
+            hashedName = HashUtils.stringMD5(fileName);
+            targetFile = cacheDir.resolve(hashedName);
+            if (Files.exists(targetFile)) {
+                LOGGER.info(fileName + " exists , delete it");
                 Files.delete(targetFile);
+
             }
             Files.copy(file.getInputStream(), targetFile);
+            if (ImageUtils.isValidImage(targetFile.toFile())) {
+                return hashedName;
+            } else {
+                LOGGER.error("invalid image");
+            }
         } catch (IOException e) {
             e.printStackTrace();
             try {
@@ -53,20 +66,52 @@ public class FileSystemStorageService implements StorageService {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            return false;
         }
-        return true;
+        return null;
+    }
+
+    @Override
+    public void move2dir(File file, String dirName) {
+
+    }
+
+    @Override
+    public Stream<String> getSimilar(String plateNumber) {
+        try {
+            Path targetDir = this.picDir.resolve(plateNumber);
+            if (!Files.exists(targetDir) && !Files.isDirectory(targetDir)) {
+                return Stream.empty();
+            }
+            return Files.walk(targetDir, 1)
+                    .filter(path -> !path.equals(targetDir))
+                    .map(path -> targetDir.relativize(path).toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Stream.empty();
+    }
+
+    @Override
+    public Resource load(String dir, String name) {
+        Path targetDir = this.picDir.resolve(dir);
+        Path targetFile = targetDir.resolve(name);
+        LOGGER.info(targetFile.toString());
+        try {
+            UrlResource resource = new UrlResource(targetFile.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                LOGGER.info("no such file or this file is not readable");
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
     public void deleteAll() {
         FileSystemUtils.deleteRecursively(cacheDir.toFile());
-    }
-
-    @Override
-    public Stream<Path> getSame(String plateNumber) {
-
-        return null;
     }
 
     @Override
