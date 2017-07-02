@@ -23,6 +23,9 @@ public class RecognizeResponse {
     public static final int CODE_RECOGNIZE_FAILED = 199;
     public static final int CODE_SUCCESS = 200;
 
+    public static final String MSG_INVALID_IMAGE = "account not exists or not wrong password";
+    public static final String MSG_NOT_SIGN_IN = "account not exists or not wrong password";
+
     @Expose
     @SerializedName("status")
     private String status;

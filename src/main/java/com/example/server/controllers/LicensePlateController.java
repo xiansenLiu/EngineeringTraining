@@ -1,9 +1,11 @@
 package com.example.server.controllers;
 
 import com.example.server.domain.ErrorRecognizeResponse;
-import com.example.server.domain.RecognizeResult;
 import com.example.server.domain.RecognizeResponse;
+import com.example.server.domain.RecognizeResult;
+import com.example.server.domain.User;
 import com.example.server.repository.RecognizeResultRepository;
+import com.example.server.repository.UserRepository;
 import com.example.server.services.StorageService;
 import com.example.server.utils.HashUtils;
 import com.example.server.utils.ImageRecognizer;
@@ -23,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Author       xinliu
@@ -38,19 +40,25 @@ public class LicensePlateController {
     private StorageService storageService;
     @Autowired
     private RecognizeResultRepository resultRepository;
-
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/recognize")
-    public RecognizeResponse recognize(@RequestParam("image") MultipartFile imageFile) {
+    public RecognizeResponse recognize(@RequestParam("image") MultipartFile imageFile, @RequestParam("account") String account, @RequestParam("password") String password) {
         RecognizeResponse response = null;
         String state;
         int code;
 
+
+        User user = userRepository.findByAccount(account);
+        if (user == null || !user.getPassword().equals(password)) {
+            return new RecognizeResponse(RecognizeResponse.STATE_ERROR, RecognizeResponse.CODE_NOT_SIGN_IN, Collections.singletonList(RecognizeResponse.MSG_NOT_SIGN_IN));
+        }
         Path file = storageService.store2cache(imageFile);
         if (file == null || !ImageUtils.isValidImage(file.toFile())) {
             state = RecognizeResponse.STATE_ERROR;
             code = RecognizeResponse.CODE_INVALID_IMAGE;
-            response = new RecognizeResponse(state, code, Arrays.asList());
+            response = new RecognizeResponse(state, code, Collections.singletonList(RecognizeResponse.MSG_INVALID_IMAGE));
         } else {
 
             String md5 = HashUtils.fileMD5(file.toFile());
@@ -69,7 +77,7 @@ public class LicensePlateController {
                     resultRepository.save(recognizeResult);
                     response = parseResponse(result);
                 } else {
-                    response = new RecognizeResponse(RecognizeResponse.STATE_ERROR, RecognizeResponse.CODE_INTERNAL_ERROR, Arrays.asList());
+                    response = new RecognizeResponse(RecognizeResponse.STATE_ERROR, RecognizeResponse.CODE_INTERNAL_ERROR, Collections.emptyList());
                 }
             }
         }
@@ -96,10 +104,10 @@ public class LicensePlateController {
         RecognizeResponse response;
         try {
             response = new Gson().fromJson(json, RecognizeResponse.class);
-        } catch (JsonSyntaxException|IllegalStateException e) {
+        } catch (JsonSyntaxException | IllegalStateException e) {
 //            e.printStackTrace();
             ErrorRecognizeResponse errorResponse = new Gson().fromJson(json, ErrorRecognizeResponse.class);
-            response = new RecognizeResponse(errorResponse.getStatus(), errorResponse.getCode(), Arrays.asList(errorResponse.getResult()));
+            response = new RecognizeResponse(errorResponse.getStatus(), errorResponse.getCode(), Collections.singletonList(errorResponse.getResult()));
         }
         return response;
     }
