@@ -23,6 +23,10 @@ repositories {
 dependencies {
 
     compile('org.springframework.boot:spring-boot-starter-web')
-    compile 'com.google.code.gson:gson:2.8.1'
+    compile("org.springframework.boot:spring-boot-starter-data-jpa")
+    compile("mysql:mysql-connector-java")
+    compile("com.h2database:h2")
+    compile("com.google.code.gson:gson")
+    compile 'com.squareup.okhttp3:okhttp:3.8.1'
     testCompile('org.springframework.boot:spring-boot-starter-test')
 }

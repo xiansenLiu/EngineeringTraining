@@ -1,7 +1,5 @@
 package com.example.server.services;
 
-import com.example.server.utils.HashUtils;
-import com.example.server.utils.ImageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,27 +36,18 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public String store2cache(MultipartFile file) {
+    public Path store2cache(MultipartFile file) {
         if (file.isEmpty()) {
             return null;
         }
         Path targetFile = null;
-        String hashedName = null;
         try {
-            String fileName = file.getOriginalFilename();
-            hashedName = HashUtils.stringMD5(fileName);
-            targetFile = cacheDir.resolve(hashedName);
+            targetFile = cacheDir.resolve(file.getOriginalFilename());
             if (Files.exists(targetFile)) {
-                LOGGER.info(fileName + " exists , delete it");
                 Files.delete(targetFile);
-
             }
             Files.copy(file.getInputStream(), targetFile);
-            if (ImageUtils.isValidImage(targetFile.toFile())) {
-                return hashedName;
-            } else {
-                LOGGER.error("invalid image");
-            }
+            return targetFile;
         } catch (IOException e) {
             e.printStackTrace();
             try {
@@ -107,6 +96,25 @@ public class FileSystemStorageService implements StorageService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public boolean move2picDir(Path source, String dir, String name) {
+        Path targetDir = this.picDir.resolve(dir);
+        Path targetFile = targetDir.resolve(name);
+        try {
+            if (!Files.exists(targetDir)) {
+                Files.createDirectory(targetDir);
+            }
+            if (Files.exists(targetFile)) {
+                Files.delete(targetFile);
+            }
+            Files.move(source, targetFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     @Override

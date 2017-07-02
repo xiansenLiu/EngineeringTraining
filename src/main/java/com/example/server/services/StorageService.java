@@ -4,6 +4,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 /**
@@ -13,13 +14,16 @@ import java.util.stream.Stream;
  */
 public interface StorageService {
 
-    String store2cache(MultipartFile file);
+    Path store2cache(MultipartFile file);
 
     void move2dir(File file, String dir);
 
     Stream<String> getSimilar(String path);
 
     Resource load(String dir, String name);
+
+
+    boolean move2picDir(Path source, String dir, String name);
 
     void deleteAll();
 

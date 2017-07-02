@@ -1,47 +1,55 @@
 package com.example.server.domain;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import javax.persistence.*;
 
 /**
  * Author       xinliu
  * Date         6/28/17
  * Time         2:39 PM
  */
+@Entity
+@Table(name = "engineering_user")
 public class User {
-    @Expose
-    @SerializedName("id")
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @Expose
-    @SerializedName("name")
-    private String name;
-    @Expose
-    @SerializedName("pwd")
-    private String pwd;
+
+    private String account;
+    private String username;
+
+    private String password;
 
     public User() {
     }
 
-    public User(Long id, String name, String pwd) {
-        this.id = id;
-        this.name = name;
-        this.pwd = pwd;
+    public User(String account, String username, String password) {
+        this.account = account;
+        this.username = username;
+        this.password = password;
     }
 
-    public String getName() {
-        return name;
+    public String getAccount() {
+        return account;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setAccount(String account) {
+        this.account = account;
     }
 
-    public String getPwd() {
-        return pwd;
+    public String getUsername() {
+        return username;
     }
 
-    public void setPwd(String pwd) {
-        this.pwd = pwd;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public Long getId() {

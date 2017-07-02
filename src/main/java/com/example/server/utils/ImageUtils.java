@@ -1,5 +1,6 @@
 package com.example.server.utils;
 
+import okhttp3.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,18 +66,30 @@ public class ImageUtils {
         return null;
     }
 
+    public static MediaType parseImageType(File file) {
+        String imageType = getImageType(file);
+        if (imageType.equals(IMAGE_TYPE_PNG)) {
+            return MediaType.parse("image/png");
+        } else if (imageType.equals(IMAGE_TYPE_PNG)) {
+            return MediaType.parse("image/jpg");
+        }
+        return null;
+    }
+
     public static boolean isValidImage(String path) {
         if (path == null || path.trim().equals("")) {
             return false;
         }
         return isValidImage(new File(path));
     }
+
     public static boolean isValidImage(File file) {
         String imageType = getImageType(file);
         if (imageType == null) {
             return false;
         }
         if (imageType.equals(IMAGE_TYPE_JPEG) || imageType.equals(IMAGE_TYPE_PNG)) {
+            LOGGER.info(imageType);
             return true;
         }
         return false;
